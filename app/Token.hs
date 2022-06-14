@@ -22,24 +22,20 @@ instance Read Token where
     readsPrec _ = readP_to_S parseToken
 
 parseToken :: ReadP Token
-parseToken = do
-    skipSymbols
-    n <- parseSetNull <++ parseOp <++ parseCycle
-    skipSymbols
-    return n
+parseToken =
+    between
+        skipSymbols
+        skipSymbols
+        parseSetNull <++ parseOp <++ parseCycle
 
 parseOp :: ReadP Token
-parseOp = foldl1 (+++) [do
+parseOp = foldl1 (<++) [do
     n <- munch1 (== c)
     return $ Op c (length n)
     | c <- "+-<>.,"]
 
 parseCycle :: ReadP Token
-parseCycle = do
-    char '['
-    n <- parseTokenExpr
-    char ']'
-    return $ Cycle n
+parseCycle = Cycle <$> between (char '[') (char ']') parseTokenExpr
 
 skipSymbols :: ReadP ()
 skipSymbols = do
