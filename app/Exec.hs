@@ -24,6 +24,7 @@ apply :: Tape -> Token -> IO Tape
 apply t@(Tape l r) (Op c n) = case c of
     '+' -> return $ Tape l (head r + n : tail r)
     '-' -> return $ Tape l (head r - n : tail r)
+    '*' -> return $ Tape l (n : tail r)
     '<' -> return $ Tape (drop n l) (reverse (take n l) ++ r)
     '>' -> return $ Tape (reverse (take n r) ++ l) (drop n r)
     '.' -> (putChar . chr . head) r >> return t

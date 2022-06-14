@@ -10,10 +10,11 @@ import Text.ParserCombinators.ReadP
 ----------------------------------------------------------------------
 
 data Token
-    = Op Char Int
+    = Op Char Int -- * for set (dev only)
     | Cycle TokenExpr
 
 instance Show Token where
+    show (Op '*' n) = "[-]" ++ replicate n '+'
     show (Op c n) = replicate n c
     show (Cycle ts) = "[" ++ show ts ++ "]"
 
@@ -21,7 +22,11 @@ instance Read Token where
     readsPrec _ = readP_to_S parseToken
 
 parseToken :: ReadP Token
-parseToken = parseOp +++ parseCycle
+parseToken = do
+    skipSymbols
+    n <- parseSetNull <++ parseOp <++ parseCycle
+    skipSymbols
+    return n
 
 parseOp :: ReadP Token
 parseOp = foldl1 (+++) [do
@@ -35,6 +40,16 @@ parseCycle = do
     n <- parseTokenExpr
     char ']'
     return $ Cycle n
+
+skipSymbols :: ReadP ()
+skipSymbols = do
+    munch $ not . (`elem` "+-<>.,[]")
+    return ()
+
+parseSetNull :: ReadP Token
+parseSetNull = do
+    string "[-]"
+    return $ Op '*' 0
 
 ----------------------------------------------------------------------
 
